@@ -3,23 +3,22 @@ using System;
 using System.Collections.Generic;
 
 
-
-
-List<string> regNr = new List<string>();
-List<string> fordonsTyp = new List<string>();
-string skiljetecken = new string(" - ");
-string fördelaMC = ";";
-string[] pPlats = new string[101];
-
-
-
-Console.WriteLine("Välkommen till Prag Parking");
-
-void meny()
+public class PargueParking
 {
-    while (true)
+
+    private static string[] pPlats = new string[100];
+
+public static void Main(string[] args)
+    { 
+
+Console.WriteLine("Välkommen till Prague Parking");
+
 {
-        Console.WriteLine("\n1. Parkera fordon");
+     while (true)
+            { 
+
+        Console.WriteLine("\n MENY");
+        Console.WriteLine("1. Parkera fordon");
         Console.WriteLine("2. Flytta fordon");
         Console.WriteLine("3. Hämta fordon");
         Console.WriteLine("4. Sök fordon");
@@ -39,20 +38,19 @@ void meny()
             case "5": Avsluta(); break;
             default: Console.WriteLine("Ogilitgt val!"); continue;
         }
-
+          
     }
 }
 
+
 void ParkeraFordon()
 {
-    string? regNr;
-    string? fordonsTyp;
     string? skiljetecken = " - ";
 
     do
     {
         Console.Write("\nVänligen ange ditt registreringsnummer: ");
-        regNr = Console.ReadLine().ToUpper();
+        string regNr = Console.ReadLine().ToUpper();
 
         
 
@@ -60,13 +58,19 @@ void ParkeraFordon()
         {
             Console.WriteLine("\nFör lång text. Max 10 tecken tillåtet. Vänligen försök igen.");
         }
-    } while (regNr.Length > 10);
+        else if (string.IsNullOrWhiteSpace(regNr))
+        {
+            Console.WriteLine("\nOgiltigt registreringsnummer");
+            return;
+        }
+        
+   
             
 
     do
     {
         Console.Write("\nVänligen ange fordonstyp (Bil eller MC): ");
-        fordonsTyp = Console.ReadLine().ToUpper();
+        string fordonsTyp = Console.ReadLine().ToUpper();
 
         if (fordonsTyp.ToLower() != "bil" && fordonsTyp.ToLower() != "mc")
         {
@@ -75,10 +79,6 @@ void ParkeraFordon()
     } while (fordonsTyp.ToLower() != "bil" && fordonsTyp.ToLower() != "mc");
 
 
-    List<string> fordonsInformation = new List<string>();
-    fordonsInformation.Add(regNr);
-    fordonsInformation.Add(skiljetecken);
-    fordonsInformation.Add(fordonsTyp);
 
     Console.WriteLine();
     Console.WriteLine(fordonsInformation);
@@ -94,7 +94,7 @@ void ParkeraFordon()
             {
                 pPlats[j] = regNr;
                 Console.WriteLine($"{regNr} har tilldelats parkeringsplats nummer {j + 1}");
-                return;
+                break;
             }
         }
         else if (fordonsTyp.ToLower() == "mc")
@@ -103,52 +103,47 @@ void ParkeraFordon()
             {
                 pPlats[j] = regNr;
                 Console.WriteLine($"{regNr} har tilldelats parkeringsplats nummer {j + 1}");
-                return;
+                break;
             }
             else if (pPlats[j].EndsWith("- MC") && !pPlats[j].Contains(fördelaMC))
             {
 
-                pPlats[j] += ";" + regNr + "-MC";
+                pPlats[j] += fördelaMC + regNr + "-MC";
                 Console.WriteLine($"{regNr} har tilldelats parkeingsplats {j + 1} (delad med annan MC)");
-                return;
+                break;
 
             }
         }
     }
-
-    Console.WriteLine("Inga lediga parkeringsPlatser.");
-
+     
 }
    
 
 
 static void FlyttaFordon()
-{
-    Console.Write("Ange registreringsnummer att flytta: ");
-    string regNr = Console.ReadLine().ToUpper();
+    {
+        Console.Write("Ange registreringsnummer att flytta: ");
+        string regNr = Console.ReadLine().ToUpper();
 
         string plats;
         if (string.IsNullOrEmpty(regNr))
-     if (plats != regNr)
+        //if (plats != regNr)
 
-    { 
+        {
 
-        Console.WriteLine("Fordonet hittades inte");
-        return;
+            Console.WriteLine("Fordonet hittades inte");
+            return;
 
-    }
-
-
- 
-        Console.WriteLine("Ange ny parkeringsplats (1-100)");
-    if (int.TryParse(Console.ReadLine(), out int nyPlats) && nyPlats >= 1 && nyPlats <= 100)
-    {
-       
         }
 
-        
-    }
-}
 
-}
+
+        Console.WriteLine("Ange ny parkeringsplats (1-100)");
+        if (int.TryParse(Console.ReadLine(), out int nyPlats) && nyPlats >= 1 && nyPlats <= 100)
+        {
+
+        }
+
+
+    }
 
