@@ -2,6 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.Net.WebSockets;
+using System.Reflection.Metadata.Ecma335;
+using System.Text.RegularExpressions;
 
 
 public class PargueParking
@@ -15,6 +17,8 @@ public class PargueParking
         Console.WriteLine("Välkommen till Prague Parking");
 
         {
+
+
             while (true)
             {
 
@@ -30,23 +34,28 @@ public class PargueParking
 
                 string val = Console.ReadLine();
 
+
                 switch (val)
                 {
                     case "1": ParkeraFordon(); break;
                     case "2": FlyttaFordon(); break;
-                    //case "3": HämtaFordon(); break;
+                    case "3": HämtaFordon(); break;
                     //case "4": SökFordon(); break;
                     //case "5": Avsluta(); return;
-                    default: Console.WriteLine("Ogilitgt val!"); continue;
+                    default: Console.WriteLine("Ogilitgt val!");
+                        val = Console.ReadLine();
+                        break;
                 }
 
             }
         }
-
+        string regNr;
+        string fordonsTyp;
+        string[] fordonsinformation = { regNr, fordonsTyp };
 
         void ParkeraFordon()
         {
-            string? skiljeteckenMC = " | ";
+            string skiljeteckenMC = " | ";
 
 
 
@@ -66,22 +75,22 @@ public class PargueParking
             }
 
 
-    
 
-                Console.Write("\nVänligen ange fordonstyp (Bil eller MC): ");
+
+            Console.Write("\nVänligen ange fordonstyp (Bil eller MC): ");
             string fordonsTyp = Console.ReadLine().ToUpper();
 
             if (fordonsTyp.ToLower() != "bil" && fordonsTyp.ToLower() != "mc" || string.IsNullOrWhiteSpace(fordonsTyp))
-                
-            { 
+
+            {
                 Console.WriteLine("Ogiltig fordonstyp. Endast 'Bil' eller 'MC' är tillåtna. Vänligen försök igen.");
                 return;
             }
 
-          
 
 
-                string fordonsinformation = $"{regNr}-{fordonsTyp}"; // Få fram fordonet samt typen i en sträng
+
+            string fordonsinformation = $"{regNr}-{fordonsTyp}"; // Få fram fordonstyp samt regNr i en sträng "ABC123-BIL"
 
             Console.WriteLine();
 
@@ -94,7 +103,7 @@ public class PargueParking
                     if (string.IsNullOrEmpty(pPlats[j]))
                     {
                         pPlats[j] = fordonsinformation;
-                        Console.WriteLine($"{regNr} har tilldelats parkeringsplats nummer {j + 1}");
+                        Console.WriteLine($"{fordonsinformation} har tilldelats parkeringsplats nummer {j + 1}");
                         return;
                     }
                 }
@@ -109,7 +118,7 @@ public class PargueParking
                     if (string.IsNullOrEmpty(pPlats[j]) && (pPlats[j] == null || !pPlats[j].Contains("- MC") && pPlats[j].Contains("|"))) //Letar efter plats med annan MC
                     {
                         pPlats[j] += skiljeteckenMC + fordonsinformation; //Lägger till den nya MC:n
-                        Console.WriteLine($"{regNr} har tilldelats en delad parkeringsplats nummer {j + 1}");
+                        Console.WriteLine($"{fordonsinformation} har tilldelats en delad parkeringsplats nummer {j + 1}");
                         return;
                     }
 
@@ -119,83 +128,226 @@ public class PargueParking
                     if (string.IsNullOrEmpty(pPlats[j]))
                     {
                         pPlats[j] = fordonsinformation;
-                        Console.WriteLine($"{regNr} har parkerats på egen plats {j + 1}");
+                        Console.WriteLine($"{fordonsinformation} har parkerats på egen plats {j + 1}");
                         return;
                     }
                 }
 
                 Console.WriteLine($"Alla platser är tyvärr upptagna");
-     
-            
-                 
+
+
+
             }
 
         }
 
-        static int HittaPlats(string regNr)
+        static int HittaPlats(string fordonsinformation)
         {
             for (int i = 0; i < pPlats.Length; i++)
             {
-                if (!string.IsNullOrEmpty(pPlats[i]) && pPlats[i].Contains(regNr))
+                if (!string.IsNullOrEmpty(pPlats[i]) && pPlats[i].Contains(fordonsinformation))
                     return i; // returnerar platsens index som int
             }
             return -1; // om inget fordon hittas
         }
+
 
         static void FlyttaFordon()
         {
             Console.Write("Ange registreringsnummer att flytta: ");
             string regNr = Console.ReadLine().ToUpper();
 
-            int gammalPlats = HittaPlats(regNr); 
+            int gammalPlats = HittaPlats(regNr);
             if (gammalPlats == -1)
             {
                 Console.WriteLine($"Kunde inte hitta fordon med registreringsnummer {regNr}");
                 return;
             }
 
-            Console.WriteLine("Ange ny parkeringsplats (1-100)");
+            Console.Write("Ange ny parkeringsplats (1-100): ");
             if (int.TryParse(Console.ReadLine(), out int nyPlats) && nyPlats < 1 || nyPlats > 100)
             {
                 Console.WriteLine("Ogiltig plats");
+                return;
 
             }
-                int nyPlatsIndex = nyPlats - 1;
 
-                if (!string.IsNullOrEmpty(pPlats[nyPlatsIndex]))
+
+
+            int nyPlatsIndex = nyPlats - 1;
+
+            if (!string.IsNullOrEmpty(pPlats[nyPlatsIndex]))
+
+                if (pPlats[nyPlatsIndex].Contains("-BIL") && pPlats[nyPlatsIndex].Contains("|"))
+
                 {
-                    Console.WriteLine($"Plats {nyPlats} är redan upptagen. Flytt misslyckades.");
+                    Console.WriteLine($"Plats {nyPlats} är redan upptagen. Flytt misslyckades. Försök igen");
                     return;
                 }
 
-                if (pPlats[gammalPlats].Contains("|"))
+            string fordonSomFlyttas = null; // Hämta fordon som ska flyttas
+
+            if (pPlats[gammalPlats].Contains("|"))
             {
-                string[] fordon = pPlats[gammalPlats].Split('|', StringSplitOptions.TrimEntries);
+                string[] mclista = pPlats[gammalPlats].Split('|', StringSplitOptions.TrimEntries);
+                List<string> kvarvarande = new List<string>();
 
-                if (fordon[0].StartsWith(regNr))
-                {
-                    pPlats[nyPlatsIndex] = fordon[0];
-                    pPlats[gammalPlats] = fordon[1];
-                }
-                else
-                {
-                    pPlats[nyPlatsIndex] = fordon[1];
-                    pPlats[gammalPlats] = fordon[0];
 
+                foreach (string fordon in mclista)
+                {
+                    if (fordon.StartsWith(regNr, StringComparison.OrdinalIgnoreCase))
+                    {
+                        fordonSomFlyttas = fordon; // den MC vi flyttar
+                    }
+                    else
+                    {
+                        kvarvarande.Add(fordon); // den andra MCn stannar kvar
+                    }
                 }
-            
+
+                pPlats[gammalPlats] = kvarvarande.Count > 0 ? string.Join("|", kvarvarande) : null; // uppdaterar tidigare plats och lämnar kvar gammal MC om det finns
             }
+
             else
             {
-                pPlats[nyPlatsIndex] = pPlats[gammalPlats];
+                fordonSomFlyttas = pPlats[gammalPlats];
                 pPlats[gammalPlats] = null;
+
+                // Bara en MC/bil kvar på platsen
             }
 
-            Console.WriteLine($"{regNr} har flyttats till plats {nyPlats}");
-        }
+            if (!string.IsNullOrEmpty(pPlats[nyPlatsIndex]))
+
+            {
+                pPlats[nyPlatsIndex] += "|" + fordonSomFlyttas;
+            }
+
+            else
+            {
+                pPlats[nyPlatsIndex] = fordonSomFlyttas;
+
+            }
+            
+
+            if (pPlats[nyPlatsIndex].Contains("-MC"))
+
+            {
+                pPlats[nyPlatsIndex] += " | " + regNr + "-MC";
+                Console.WriteLine($"{regNr} har flyttats till delad plats {nyPlats}.");
+
+                pPlats[gammalPlats] = null; // ta bort fordonet från gamla platsen
+                return;
+            }
+
+            else if (pPlats[nyPlatsIndex].Contains("|"))
+            {
+
+                Console.WriteLine($"Plats {nyPlats} är full. Flytt misslyckades.");
+                return;
+
+            }
+
+
+
+
+
+
+
+            Console.WriteLine($"{regNr} har flyttats till parkeringsplats nummer {nyPlats}");
+    }
     
 
+       static void HämtaFordon()
 
+            
+        {
+            Console.Write("Vänligen ange registreringsnummer för fordon som ska hämtas ut: ");
+            string regNr = Console.ReadLine();
+
+            if (string.IsNullOrWhiteSpace(regNr))
+            {
+                Console.WriteLine("Ogiltig angivelse. Försök igen");
+                return;
+            }
+
+            bool hittad = false; //markerar om något hittas
+
+            
+
+            for (int j = 0; j < pPlats.Length; j++) // Leta igenom alla platser
+
+            {
+                if (string.IsNullOrEmpty(pPlats[j]))
+                    continue;
+
+
+                if (pPlats[j].Contains(regNr,StringComparison.OrdinalIgnoreCase)) // Om platsen innehåller regnr
+
+                {
+                    hittad = true;
+
+                    if (pPlats[j].Contains("|"))
+
+                    {
+                        string[] mcLista = pPlats[j].Split("|"); // dela upp MC
+
+                        List<string> kvarvarande = new List<string>();
+
+
+                        foreach (string fordon in mcLista)
+                        {
+                            if (!fordon.Contains(regNr,StringComparison.OrdinalIgnoreCase)) // Behåller övriga fordon, ignorerar case
+                            {
+                                kvarvarande.Add(fordon); // Lägg till de MCs som inte ska tas bort
+                            }
+                        }
+
+                        // Om det finns någon MC kvar, slå ihop dem
+                        if (kvarvarande.Count > 0)
+                            pPlats[j] = string.Join(" | ", kvarvarande);
+                        else
+                            pPlats[j] = null; // annars är platsen tom
+
+                        Console.WriteLine($"{regNr} har hämtats ut från plats {j + 1}.");
+                        return;
+                    }
+
+                    else
+                    {
+                        pPlats[j] = null;
+                        Console.WriteLine($"{regNr} har hämtats ut från plats {j + 1}");
+                        return;
+                    }
+                }
+
+
+            }
+
+            
+                if (!hittad)
+
+                {
+                    Console.WriteLine($"Inget fordon med registreringsnnummer {regNr} kunde hittas.");
+                    return;
+                }
+
+            
+
+
+
+
+
+
+
+
+
+
+
+
+        }
+            
     }
+
+
 }
 
