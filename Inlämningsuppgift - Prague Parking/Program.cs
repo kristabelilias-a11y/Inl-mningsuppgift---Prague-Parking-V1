@@ -9,7 +9,7 @@ using System.Text.RegularExpressions;
 public class PargueParking
 {
 
-    private static string[] pPlats = new string[100];
+    private static string[] pPlats = new string[101];
 
     public static void Main(string[] args)
     {
@@ -57,11 +57,21 @@ public class PargueParking
         void ParkeraFordon()
         {
 
-
+          
 
             Console.Write("\nVänligen ange ditt registreringsnummer: ");
             string regNr = Console.ReadLine().ToUpper();
 
+
+            // Förhindra att fordonet redan finns i systemet
+            for (int j = 0; j < pPlats.Length; j++)
+            {
+                if (!string.IsNullOrEmpty(pPlats[j]) && pPlats[j].Contains(regNr + "-", StringComparison.OrdinalIgnoreCase))
+                {
+                    Console.WriteLine($"\nFordon med registreringsnummer {regNr} finns redan på plats {j + 1}.");
+                    return;
+                }
+            }
 
 
             if (regNr.Length > 10)
@@ -95,10 +105,29 @@ public class PargueParking
             Console.WriteLine();
 
 
-            if (fordonsTyp == "BIL")
+            if (fordonsTyp.EndsWith("BIL"))
 
             {
-                for (int j = 0; j < 100; j++)
+                for (int j = 0; j < pPlats.Length; j++)
+                {
+                    if (string.IsNullOrEmpty(pPlats[j]))
+                    {
+                        pPlats[j] = fordonsinformation;
+                        Console.WriteLine($"\n{fordonsinformation} har tilldelats parkeringsplats nummer {j + 1}");
+                        return;
+
+                    }
+
+                    
+
+                }
+
+            }
+
+            else if (fordonsTyp.EndsWith("MC"))
+
+            {
+                for (int j = 0; j < pPlats.Length; j++)
                 {
                     if (string.IsNullOrEmpty(pPlats[j]))
                     {
@@ -107,31 +136,27 @@ public class PargueParking
                         return;
                     }
                 }
-                Console.WriteLine("\nlla platser är tyvärr upptagna");
-            }
-
-            else if (fordonsTyp == "MC")
-
-            {
-                for (int j = 0; j < pPlats.Length; j++)
-
-                    if (string.IsNullOrEmpty(pPlats[j]) && (pPlats[j] == null || !pPlats[j].Contains("-MC") && pPlats[j].Contains(" | "))) //Letar efter plats med annan MC
-                    {
-                        pPlats[j] += " | " + fordonsinformation; //Lägger till den nya MC:n
-                        Console.WriteLine($"\n{fordonsinformation} har tilldelats en delad parkeringsplats nummer {j + 1}");
-                        return;
-                    }
 
 
                 for (int j = 0; j < pPlats.Length; j++)
                 {
-                    if (string.IsNullOrEmpty(pPlats[j]))
+
+                    if (pPlats[j].Contains("MC")) //Letar efter plats med annan MC
                     {
-                        pPlats[j] = fordonsinformation;
-                        Console.WriteLine($"\n{fordonsinformation} har parkerats på egen plats {j + 1}");
+                        pPlats[j] += " | " + fordonsinformation; //Lägger till den nya MC:n
+                        Console.WriteLine($"\n{fordonsinformation} har tilldelats parkeringsplats nummer {j + 1}");
+                        return;
+
+                    }
+                    if (fordonsTyp.EndsWith("BIL"))
+                    {
+                        Console.WriteLine("Denna plats rymmer inte en bil.");
                         return;
                     }
+
                 }
+
+
 
                 Console.WriteLine($"\nAlla platser är tyvärr upptagna");
 
@@ -140,24 +165,27 @@ public class PargueParking
             }
 
         }
+        
 
-        static int HittaPlats(string fordonsinformation)
-        {
-            for (int i = 0; i < pPlats.Length; i++)
+            static int HittaPlats(string fordonsinformation)
             {
-                if (!string.IsNullOrEmpty(pPlats[i]) && pPlats[i].Contains(fordonsinformation))
-                    return i; // returnerar platsens index som int
+                for (int j = 0; j < pPlats.Length; j++)
+                {
+                    if (!string.IsNullOrEmpty(pPlats[j]) && pPlats[j].Contains(fordonsinformation))
+                        return j; // returnerar platsens index som int
+                }
+                return -1; // om inget fordon hittas
             }
-            return -1; // om inget fordon hittas
-        }
 
+        
 
         static void FlyttaFordon()
         {
             Console.Write("\nAnge registreringsnummer att flytta: ");
-            string regNr = Console.ReadLine().ToUpper();
+            string regNr= Console.ReadLine().ToUpper();
 
             int gammalPlats = HittaPlats(regNr);
+
             if (gammalPlats == -1)
             {
                 Console.WriteLine($"\nKunde inte hitta fordon med registreringsnummer {regNr}");
@@ -172,24 +200,55 @@ public class PargueParking
 
             }
 
-
+       
 
             int nyPlatsIndex = nyPlats - 1;
 
             if (!string.IsNullOrEmpty(pPlats[nyPlatsIndex]))
 
-                if (pPlats[nyPlatsIndex].Contains("-BIL",StringComparison.OrdinalIgnoreCase))
+            {
+
+                if (pPlats[nyPlatsIndex].Contains("BIL", StringComparison.OrdinalIgnoreCase))
+
 
                 {
                     Console.WriteLine($"\nPlats {nyPlats} är redan upptagen. Flytt misslyckades. Försök igen");
                     return;
                 }
 
+
+
+                { if (pPlats[gammalPlats].EndsWith("BIL",StringComparison.OrdinalIgnoreCase))
+
+                    if (pPlats[nyPlatsIndex].Contains("MC")) // En bil kan ej ställa sig där det finns en MC.
+                    {
+                        Console.WriteLine("Denna plats rymmer inte en bil.");
+                        return;
+                    }
+
+                }
+
+                if (pPlats[nyPlatsIndex].Contains(" | ") && pPlats[nyPlatsIndex].Contains("MC"))
+                {
+
+                    Console.WriteLine($"\nPlats {nyPlats} är full. Flytt misslyckades."); // Om det redan står två MC på platsen
+                    return;
+
+                }
+
+                if (pPlats[nyPlatsIndex].Contains("BIL", StringComparison.OrdinalIgnoreCase))
+                {
+                    Console.WriteLine($"\nKan inte flytta MC till plats {nyPlats}, där står en bil."); // En MC kan ej flyttas dit en bil står
+                    return;
+                }
+            }
+     
+
             string fordonSomFlyttas = null; // Hämta fordon som ska flyttas
 
             if (pPlats[gammalPlats].Contains(" | "))
             {
-                string[] mclista = pPlats[gammalPlats].Split(" | ", StringSplitOptions.TrimEntries);
+                string[] mclista = pPlats[gammalPlats].Split(" | ", StringSplitOptions.TrimEntries); // Dela upp MC som ska flyttas
                 List<string> kvarvarande = new List<string>();
 
 
@@ -208,11 +267,11 @@ public class PargueParking
                 pPlats[gammalPlats] = kvarvarande.Count > 0 ? string.Join(" | ", kvarvarande) : null; // uppdaterar tidigare plats och lämnar kvar gammal MC om det finns
             }
 
-        
+
 
             else
             {
-                fordonSomFlyttas = pPlats[gammalPlats];
+                fordonSomFlyttas = pPlats[nyPlatsIndex];
                 pPlats[gammalPlats] = null;
 
                 // Bara en MC/bil kvar på platsen
@@ -221,41 +280,22 @@ public class PargueParking
             if (!string.IsNullOrEmpty(pPlats[nyPlatsIndex]))
 
             {
-                pPlats[nyPlatsIndex] += " | " + fordonSomFlyttas;
+                if (pPlats[nyPlatsIndex].Contains("MC"))
+                {
+                    pPlats[nyPlatsIndex] += " | " + fordonSomFlyttas; // Lägger endast till fordonet som flyttas
+                    Console.WriteLine($"\n{regNr} har flyttats till delad plats {nyPlats}.");
+                    return;
+                }
+
+               
             }
+           
 
             else
-            {
-                pPlats[nyPlatsIndex] = fordonSomFlyttas;
+            { Console.WriteLine($"\n{regNr} har flyttats till parkeringsplats nummer {nyPlats}"); }
 
-            }
-            
-
-            if (pPlats[nyPlatsIndex].Contains("-MC", StringComparison.OrdinalIgnoreCase))
-
-            { 
-                pPlats[nyPlatsIndex] = " | " + regNr + "-MC";
-                Console.WriteLine($"\n{regNr} har flyttats till delad plats {nyPlats}.");
-
-                pPlats[gammalPlats] = null; // ta bort fordonet från gamla platsen
-                return;
-            }
-
-            else if (pPlats[nyPlatsIndex].Contains(" | "))
-            {
-
-                Console.WriteLine($"\nPlats {nyPlats} är full. Flytt misslyckades.");
-                return;
-
-            }
-
-
-
-
-
-
-
-            Console.WriteLine($"\n{regNr} har flyttats till parkeringsplats nummer {nyPlats}");
+        }
+                
     }
     
 
@@ -264,7 +304,7 @@ public class PargueParking
             
         {
             Console.Write("\nVänligen ange registreringsnummer för fordon som ska hämtas ut: ");
-            string regNr = Console.ReadLine();
+            string regNr = Console.ReadLine().ToUpper();
 
             if (string.IsNullOrWhiteSpace(regNr))
             {
@@ -304,11 +344,7 @@ public class PargueParking
                             }
                         }
 
-                        // Om det finns någon MC kvar, slå ihop dem
-                        if (kvarvarande.Count > 0)
-                            pPlats[j] = string.Join(" | ", kvarvarande);
-                        else
-                            pPlats[j] = null; // annars är platsen tom
+                        
 
                         Console.WriteLine($"\n{regNr} har hämtats ut från plats {j + 1}.");
                         return;
@@ -357,7 +393,7 @@ public class PargueParking
             {
                 if (!string.IsNullOrEmpty(pPlats[j]) && pPlats[j].Contains(regNr, StringComparison.OrdinalIgnoreCase))
                 {
-                    Console.WriteLine($"\n{regNr} hittades på parkeirngsplats {j + 1}");
+                    Console.WriteLine($"\n{regNr} hittades på parkeringsplats {j + 1}");
                     hittad = true;
                 }
             }
@@ -377,5 +413,5 @@ public class PargueParking
     }
 
 
-}
+
 
