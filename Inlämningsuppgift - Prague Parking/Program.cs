@@ -48,7 +48,7 @@ public class PargueParking
                         break;
 
                     default: Console.WriteLine("\nOgilitgt val!");
-                                           return;
+                                           break;
                 }
 
             }
@@ -271,7 +271,7 @@ public class PargueParking
 
             else
             {
-                fordonSomFlyttas = pPlats[nyPlatsIndex];
+                fordonSomFlyttas = pPlats[gammalPlats];
                 pPlats[gammalPlats] = null;
 
                 // Bara en MC/bil kvar på platsen
@@ -292,7 +292,11 @@ public class PargueParking
            
 
             else
-            { Console.WriteLine($"\n{regNr} har flyttats till parkeringsplats nummer {nyPlats}"); }
+
+            {
+                pPlats[nyPlatsIndex] = fordonSomFlyttas;
+                Console.WriteLine($"\n{regNr} har flyttats till parkeringsplats nummer {nyPlats}"); 
+            }
 
         }
                 
